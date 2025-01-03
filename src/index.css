@@ -1,0 +1,41 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- STYLES --- */
+
+/* Custom hover effect for delete */
+.delete-hover:hover ~ .task-cell {
+  background-color: #fecaca; /* Tailwind's red-200 color */
+}
+.dragging {
+  opacity: 0.5;
+}
+.placeholder {
+  border: 2px dashed #aaa;
+  border-radius: 8px;
+  margin: 4px 0;
+  padding: 16px;
+  background-color: #f0f0f0;
+}
+/* Fade-in buttons on hover */
+.task-button {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  width: 80px;
+  text-align: center;
+}
+.task-row:hover .task-button {
+  opacity: 1;
+}
+.task-button.delete-button {
+  width: 40px;
+}
+/* We attach Sortable’s `handle` to these classes: */
+.grab-handle {
+  cursor: move;
+}
+.sub-grab-handle {
+  cursor: move;
+}
