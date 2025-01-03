@@ -7,20 +7,35 @@ const FileControls = ({ onUpload, onSave }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleFileChange = (e) => {
+	console.log('[FileControls] handleFileChange triggered...');
 	const file = e.target.files[0];
-	if (!file) return;
+	console.log('[FileControls] Chosen file:', file);
+
+	if (!file) {
+	  console.log('[FileControls] No file selected, returning...');
+	  return;
+	}
+
 	setIsUploading(true);
+
 	const reader = new FileReader();
 	reader.onload = (event) => {
+	  console.log('[FileControls] FileReader onload event');
+	  console.log('[FileControls] Raw file contents:', event.target.result);
+
 	  try {
 		const json = JSON.parse(event.target.result);
+		console.log('[FileControls] Parsed JSON:', json);
 		onUpload(json);
 		alert('To-Do list uploaded successfully.');
 	  } catch (error) {
+		console.error('[FileControls] Failed to parse JSON file:', error);
 		alert('Failed to parse JSON file.');
 	  }
+
 	  setIsUploading(false);
 	};
+
 	reader.readAsText(file);
 
 	// Reset the input value to allow uploading the same file again if needed
@@ -28,12 +43,15 @@ const FileControls = ({ onUpload, onSave }) => {
   };
 
   const handleUploadClick = () => {
+	console.log('[FileControls] Upload button clicked.');
 	fileInputRef.current.click();
   };
 
   const handleSaveClick = () => {
+	console.log('[FileControls] Save button clicked.');
 	setIsSaving(true);
 	onSave();
+
 	setTimeout(() => {
 	  setIsSaving(false);
 	  alert('To-Do list saved successfully.');

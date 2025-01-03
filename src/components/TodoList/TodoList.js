@@ -70,12 +70,15 @@ const TodoList = () => {
    * 4) FILE UPLOAD & DOWNLOAD
    ********************************/
   const handleUpload = (uploadedData) => {
-	if (!uploadedData.tasks || !uploadedData.createdAt) {
-	  alert('Invalid file format.');
+	console.log('[TodoList] handleUpload called with:', uploadedData);
+
+	if (!uploadedData.tasks) {
+	  console.error('[TodoList] "tasks" field is missing in uploaded data.');
+	  alert('Invalid file format: "tasks" array is missing.');
 	  return;
 	}
 
-	// Basic validation of fields
+	console.log('[TodoList] Validating uploaded tasks...');
 	const isValid = uploadedData.tasks.every((task) => {
 	  if (
 		!task.id ||
@@ -83,18 +86,23 @@ const TodoList = () => {
 		typeof task.completed !== 'boolean' ||
 		(task.completed && !task.completedTime)
 	  ) {
+		console.error('[TodoList] A task is missing some required fields:', task);
 		return false;
 	  }
-	  // Validate subtasks
+
 	  if (task.subtasks) {
-		return task.subtasks.every((sub) => {
-		  return (
+		const allSubsValid = task.subtasks.every((sub) => {
+		  const subOk =
 			sub.id &&
 			typeof sub.text === 'string' &&
 			typeof sub.completed === 'boolean' &&
-			(sub.completed && sub.completedTime)
-		  );
+			(sub.completed ? sub.completedTime : true);
+		  if (!subOk) {
+			console.error('[TodoList] A subtask is missing fields:', sub);
+		  }
+		  return subOk;
 		});
+		return allSubsValid;
 	  }
 	  return true;
 	});
@@ -104,17 +112,27 @@ const TodoList = () => {
 	  return;
 	}
 
-	setTitle(uploadedData.title || 'My Master List'); // Fallback if no title
+	const validCreatedAt = uploadedData.createdAt
+	  ? new Date(uploadedData.createdAt)
+	  : new Date();
+
+	console.log('[TodoList] Setting states from uploaded data...');
+	setTitle(uploadedData.title || 'My Master List');
 	setTasks(uploadedData.tasks);
-	setCreatedAt(new Date(uploadedData.createdAt));
+	setCreatedAt(validCreatedAt);
+
+	console.log('[TodoList] Updated title, tasks, createdAt.');
   };
 
   const handleSave = () => {
+	console.log('[TodoList] handleSave triggered.');
 	const data = {
 	  title,
 	  tasks,
 	  createdAt: createdAt.toISOString(),
 	};
+	console.log('[TodoList] Data to be saved:', data);
+
 	const blob = new Blob([JSON.stringify(data, null, 2)], {
 	  type: 'application/json',
 	});
@@ -136,6 +154,7 @@ const TodoList = () => {
    * 5) TITLE EDITING HANDLERS
    ********************************/
   const handleTitleClick = () => {
+	console.log('[TodoList] Title clicked, switching to edit mode.');
 	setIsEditingTitle(true);
   };
 
