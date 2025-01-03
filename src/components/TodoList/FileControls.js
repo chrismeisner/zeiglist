@@ -22,6 +22,7 @@ const FileControls = ({ onUpload, onSave }) => {
 	  setIsUploading(false);
 	};
 	reader.readAsText(file);
+
 	// Reset the input value to allow uploading the same file again if needed
 	e.target.value = '';
   };
@@ -85,6 +86,10 @@ const FileControls = ({ onUpload, onSave }) => {
 	  >
 		{isSaving ? 'Saving...' : 'Save'}
 	  </button>
+
+	  {/*
+		The Clear button has been removed entirely.
+	  */}
 	</div>
   );
 };

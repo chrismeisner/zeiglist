@@ -1,25 +1,26 @@
 // src/components/TodoList/TodoList.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import TaskInput from './TaskInput';
 import TaskList from './TaskList';
 import ProgressBar from '../ProgressBar';
 import ProgressSummary from '../ProgressSummary';
 import FileControls from './FileControls';
-import { v4 as uuidv4 } from 'uuid'; // For unique IDs
+import { v4 as uuidv4 } from 'uuid';
 
 const TodoList = () => {
-  const [tasks, setTasks] = useState(() => {
-	// Retrieve tasks from localStorage on initial load
-	const savedData = localStorage.getItem('todoData');
-	return savedData ? JSON.parse(savedData).tasks : [];
-  });
+  /********************************
+   * 1) STATE FOR TITLE, TASKS, ETC.
+   * (Removed localStorage references; 
+   *  just using defaults now.)
+   ********************************/
+  const [title, setTitle] = useState('My Master List');
+  const [tasks, setTasks] = useState([]);
+  const [createdAt, setCreatedAt] = useState(new Date());
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-  const [createdAt, setCreatedAt] = useState(() => {
-	const savedData = localStorage.getItem('todoData');
-	return savedData ? new Date(JSON.parse(savedData).createdAt) : new Date();
-  });
-
-  // Derived progress info
+  /********************************
+   * 2) DERIVED PROGRESS INFO
+   ********************************/
   const totalTasks = tasks.reduce(
 	(acc, task) => acc + 1 + task.subtasks.length,
 	0
@@ -33,10 +34,13 @@ const TodoList = () => {
   );
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
+  /********************************
+   * 3) TASK CRUD OPERATIONS
+   ********************************/
   const addTask = (text) => {
 	if (text.trim() === '') return;
-	setTasks([
-	  ...tasks,
+	setTasks((prevTasks) => [
+	  ...prevTasks,
 	  {
 		id: uuidv4(),
 		text: text.trim(),
@@ -49,34 +53,29 @@ const TodoList = () => {
   };
 
   const updateTask = (updatedTask) => {
-	setTasks(tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+	setTasks((prevTasks) =>
+	  prevTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+	);
   };
 
   const deleteTask = (taskId) => {
-	setTasks(tasks.filter((t) => t.id !== taskId));
+	setTasks((prevTasks) => prevTasks.filter((t) => t.id !== taskId));
   };
 
   const reorderTasks = (newTasks) => {
 	setTasks(newTasks);
   };
 
-  // Save to localStorage whenever tasks or createdAt change
-  useEffect(() => {
-	const data = {
-	  tasks,
-	  createdAt: createdAt.toISOString(),
-	};
-	localStorage.setItem('todoData', JSON.stringify(data));
-  }, [tasks, createdAt]);
-
-  // Handle uploading a new to-do list
+  /********************************
+   * 4) FILE UPLOAD & DOWNLOAD
+   ********************************/
   const handleUpload = (uploadedData) => {
 	if (!uploadedData.tasks || !uploadedData.createdAt) {
 	  alert('Invalid file format.');
 	  return;
 	}
 
-	// Validate each task
+	// Basic validation of fields
 	const isValid = uploadedData.tasks.every((task) => {
 	  if (
 		!task.id ||
@@ -86,7 +85,6 @@ const TodoList = () => {
 	  ) {
 		return false;
 	  }
-
 	  // Validate subtasks
 	  if (task.subtasks) {
 		return task.subtasks.every((sub) => {
@@ -98,7 +96,6 @@ const TodoList = () => {
 		  );
 		});
 	  }
-
 	  return true;
 	});
 
@@ -107,13 +104,14 @@ const TodoList = () => {
 	  return;
 	}
 
+	setTitle(uploadedData.title || 'My Master List'); // Fallback if no title
 	setTasks(uploadedData.tasks);
 	setCreatedAt(new Date(uploadedData.createdAt));
   };
 
-  // Handle saving the current to-do list
   const handleSave = () => {
 	const data = {
+	  title,
 	  tasks,
 	  createdAt: createdAt.toISOString(),
 	};
@@ -121,20 +119,71 @@ const TodoList = () => {
 	  type: 'application/json',
 	});
 	const url = URL.createObjectURL(blob);
+
+	// Sanitize title for file name if needed
+	const safeTitle = title.replace(/[^\w\s-]/g, '');
 	const link = document.createElement('a');
 	link.href = url;
-	link.download = `todo-list-${createdAt.toISOString()}.json`;
+	link.download = `${safeTitle}-${createdAt.toISOString()}.json`;
 	document.body.appendChild(link);
 	link.click();
 	document.body.removeChild(link);
   };
 
+  // Removed `handleClear` and any calls to localStorage
+
+  /********************************
+   * 5) TITLE EDITING HANDLERS
+   ********************************/
+  const handleTitleClick = () => {
+	setIsEditingTitle(true);
+  };
+
+  const handleTitleChange = (e) => {
+	setTitle(e.target.value);
+  };
+
+  const handleTitleBlur = () => {
+	setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e) => {
+	if (e.key === 'Enter') {
+	  setIsEditingTitle(false);
+	}
+  };
+
+  /********************************
+   * 6) RENDER
+   ********************************/
   return (
 	<div>
-	  {/* File Controls */}
+	  {/* File Upload & Save (no Clear) */}
 	  <FileControls onUpload={handleUpload} onSave={handleSave} />
 
-	  {/* Display Creation Time */}
+	  {/* Editable Title */}
+	  <div className="text-center mb-4">
+		{isEditingTitle ? (
+		  <input
+			type="text"
+			className="text-lg font-bold border-b outline-none px-1"
+			value={title}
+			onChange={handleTitleChange}
+			onBlur={handleTitleBlur}
+			onKeyDown={handleTitleKeyDown}
+			autoFocus
+		  />
+		) : (
+		  <h1
+			className="text-lg font-bold cursor-pointer"
+			onClick={handleTitleClick}
+		  >
+			{title}
+		  </h1>
+		)}
+	  </div>
+
+	  {/* Creation Time */}
 	  <div className="text-center mb-4">
 		<p className="text-sm text-gray-500">
 		  List Created:{' '}
