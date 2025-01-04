@@ -1,3 +1,4 @@
+// src/components/MainZeiglist.js
 import React from 'react';
 
 const MainZeiglist = () => {

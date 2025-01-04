@@ -1,5 +1,4 @@
-// File: /Users/chrismeisner/Projects/zeiglist/src/components/TodoList/FileControls.js
-
+// src/components/TodoList/FileControls.js
 import React, { useRef, useState } from 'react';
 
 const FileControls = ({ onUpload, onSave, todoData }) => {
@@ -82,7 +81,6 @@ const FileControls = ({ onUpload, onSave, todoData }) => {
 		headers: {
 		  'Content-Type': 'application/json',
 		},
-		// IMPORTANT: Include eventDateTime if present
 		body: JSON.stringify({
 		  title: todoData.title,
 		  tasks: todoData.tasks,
@@ -96,7 +94,6 @@ const FileControls = ({ onUpload, onSave, todoData }) => {
 	  console.log('[FileControls] RAW RESPONSE:', rawResponse);
 
 	  if (!response.ok) {
-		// If not OK, we might be receiving an error or HTML
 		throw new Error(`Fetch failed: ${response.status} - ${response.statusText}`);
 	  }
 

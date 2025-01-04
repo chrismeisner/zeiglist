@@ -3,9 +3,17 @@ import React from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import TaskItem from './TaskItem';
 
-const TaskList = ({ tasks, updateTask, deleteTask, reorderTasks }) => {
+const TaskList = ({
+  tasks,
+  updateTask,
+  deleteTask,
+  reorderTasks,
+}) => {
   // Order tasks: incomplete first, then complete
-  const orderedTasks = [...tasks.filter((t) => !t.completed), ...tasks.filter((t) => t.completed)];
+  const orderedTasks = [
+	...tasks.filter((t) => !t.completed),
+	...tasks.filter((t) => t.completed),
+  ];
 
   return (
 	<ReactSortable
@@ -21,7 +29,8 @@ const TaskList = ({ tasks, updateTask, deleteTask, reorderTasks }) => {
 		  task={task}
 		  updateTask={updateTask}
 		  deleteTask={deleteTask}
-		  isTop={index === 0} // Pass isTop prop to the first task
+		  // Only the VERY FIRST incomplete task (index=0 in the incomplete list) is "top"
+		  isTop={index === 0 && !task.completed}
 		/>
 	  ))}
 	</ReactSortable>

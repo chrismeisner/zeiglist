@@ -3,7 +3,12 @@ import React from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import SubTaskItem from './SubTaskItem';
 
-const SubTaskList = ({ subtasks, parentTask, updateSubTasks }) => {
+const SubTaskList = ({
+  subtasks,
+  parentTask,
+  updateSubTasks,
+  isTop // Accept isTop prop
+}) => {
   const handleSortEnd = (newOrder) => {
 	const updatedSubtasks = newOrder.map((sub) => ({
 	  id: sub.id,
@@ -29,6 +34,7 @@ const SubTaskList = ({ subtasks, parentTask, updateSubTasks }) => {
 		  sub={sub}
 		  parentTask={parentTask}
 		  updateSubTasks={updateSubTasks}
+		  isTop={isTop} // Pass isTop prop
 		/>
 	  ))}
 	</ReactSortable>

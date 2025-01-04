@@ -1,5 +1,4 @@
-// File: /Users/chrismeisner/Projects/zeiglist/src/components/TodoList/TodoList.js
-
+// src/components/TodoList/TodoList.js
 import React, { useState, useEffect } from 'react';
 import TaskInput from './TaskInput';
 import TaskList from './TaskList';
@@ -13,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const TodoList = ({ loadedData }) => {
   /********************************
-   * 1) STATE FOR TITLE, TASKS, CREATED TIME
+   * 1) State for tasks, title, createdAt, countdown
    ********************************/
   const [title, setTitle] = useState(
 	loadedData ? loadedData.title : 'My Master List'
@@ -22,17 +21,11 @@ const TodoList = ({ loadedData }) => {
   const [createdAt, setCreatedAt] = useState(
 	loadedData?.createdAt ? new Date(loadedData.createdAt) : new Date()
   );
-
-  /********************************
-   * 2) COUNTDOWN & TIME PICKER
-   ********************************/
-  // If loadedData included eventDateTime, restore it. Otherwise default to empty
   const [eventDateTime, setEventDateTime] = useState(
-	loadedData?.eventDateTime ? loadedData.eventDateTime : ''
+	loadedData?.eventDateTime || ''
   );
   const [countdownText, setCountdownText] = useState('');
 
-  // If loadedData changes (e.g. different ID?), update
   useEffect(() => {
 	if (loadedData) {
 	  setTitle(loadedData.title || 'My Master List');
@@ -44,7 +37,9 @@ const TodoList = ({ loadedData }) => {
 	}
   }, [loadedData]);
 
-  // Recalculate countdown every second
+  /********************************
+   * 2) Countdown effect
+   ********************************/
   useEffect(() => {
 	const timer = setInterval(() => {
 	  if (!eventDateTime) {
@@ -77,7 +72,7 @@ const TodoList = ({ loadedData }) => {
   };
 
   /********************************
-   * 3) DERIVED PROGRESS INFO
+   * 3) Derived progress info
    ********************************/
   const totalTasks = tasks.reduce(
 	(acc, task) => acc + 1 + task.subtasks.length,
@@ -93,12 +88,11 @@ const TodoList = ({ loadedData }) => {
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   /********************************
-   * 4) TASK CRUD OPERATIONS
+   * 4) Task CRUD
    ********************************/
   const addTask = (text) => {
 	if (text.trim() === '') return;
 	setTasks((prev) => [
-	  ...prev,
 	  {
 		id: uuidv4(),
 		text: text.trim(),
@@ -107,6 +101,7 @@ const TodoList = ({ loadedData }) => {
 		subtasks: [],
 		createdAt: new Date(),
 	  },
+	  ...prev,
 	]);
   };
 
@@ -120,44 +115,38 @@ const TodoList = ({ loadedData }) => {
 	setTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
+  /**
+   * 5) Reorder tasks => the first incomplete task is "top".
+   */
   const reorderTasks = (newTasks) => {
 	setTasks(newTasks);
   };
 
   /********************************
-   * 5) FILE UPLOAD & DOWNLOAD
+   * 6) File Upload & Download
    ********************************/
-  // (A) handleUpload: read "eventDateTime" if present in the JSON
   const handleUpload = (uploadedData) => {
-	console.log('[TodoList] handleUpload called with:', uploadedData);
 	if (!uploadedData.tasks) {
 	  alert('Invalid file format: "tasks" array is missing.');
 	  return;
 	}
-
 	setTitle(uploadedData.title || 'My Master List');
 	setTasks(uploadedData.tasks);
 	setCreatedAt(
 	  uploadedData.createdAt ? new Date(uploadedData.createdAt) : new Date()
 	);
-
-	// If JSON includes eventDateTime, restore it
 	if (uploadedData.eventDateTime) {
 	  setEventDateTime(uploadedData.eventDateTime);
 	}
   };
 
-  // (B) handleSave: include "eventDateTime" in the JSON
   const handleSave = () => {
-	console.log('[TodoList] handleSave triggered.');
 	const data = {
 	  title,
 	  tasks,
 	  createdAt: createdAt.toISOString(),
-	  eventDateTime, // <--- Important
+	  eventDateTime,
 	};
-	console.log('[TodoList] Data to be saved:', data);
-
 	const blob = new Blob([JSON.stringify(data, null, 2)], {
 	  type: 'application/json',
 	});
@@ -173,32 +162,20 @@ const TodoList = ({ loadedData }) => {
   };
 
   /********************************
-   * 6) TITLE EDITING HANDLERS
+   * 7) Title editing
    ********************************/
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-  const handleTitleClick = () => {
-	setIsEditingTitle(true);
-  };
-
-  const handleTitleChange = (e) => {
-	setTitle(e.target.value);
-  };
-
-  const handleTitleBlur = () => {
-	setIsEditingTitle(false);
-  };
-
+  const handleTitleClick = () => setIsEditingTitle(true);
+  const handleTitleChange = (e) => setTitle(e.target.value);
+  const handleTitleBlur = () => setIsEditingTitle(false);
   const handleTitleKeyDown = (e) => {
-	if (e.key === 'Enter') {
-	  setIsEditingTitle(false);
-	}
+	if (e.key === 'Enter') setIsEditingTitle(false);
   };
 
   /********************************
-   * 7) RENDER
+   * 8) Render
    ********************************/
-  // Combine all data we might want to store (for FileControls, Airtable, etc.)
   const todoData = {
 	title,
 	tasks,
@@ -208,14 +185,10 @@ const TodoList = ({ loadedData }) => {
 
   return (
 	<div>
-	  {/* (1) File Upload & Save Controls */}
-	  <FileControls
-		onUpload={handleUpload}
-		onSave={handleSave}
-		todoData={todoData}
-	  />
+	  {/* FileControls */}
+	  <FileControls onUpload={handleUpload} onSave={handleSave} todoData={todoData} />
 
-	  {/* (2) Countdown & DateTimePicker & Current Time Display */}
+	  {/* Current Time, date-time picker, countdown */}
 	  <CurrentTimeDisplay />
 	  <DateTimePicker
 		eventDateTime={eventDateTime}
@@ -224,7 +197,7 @@ const TodoList = ({ loadedData }) => {
 	  />
 	  <Countdown countdownText={countdownText} />
 
-	  {/* (3) Editable Title */}
+	  {/* Editable Title */}
 	  <div className="text-center mb-4">
 		{isEditingTitle ? (
 		  <input
@@ -237,16 +210,13 @@ const TodoList = ({ loadedData }) => {
 			autoFocus
 		  />
 		) : (
-		  <h1
-			className="text-lg font-bold cursor-pointer"
-			onClick={handleTitleClick}
-		  >
+		  <h1 className="text-lg font-bold cursor-pointer" onClick={handleTitleClick}>
 			{title}
 		  </h1>
 		)}
 	  </div>
 
-	  {/* (4) Creation Time Display */}
+	  {/* Creation Time */}
 	  <div className="text-center mb-4">
 		<p className="text-sm text-gray-500">
 		  List Created:{' '}
@@ -263,18 +233,18 @@ const TodoList = ({ loadedData }) => {
 		</p>
 	  </div>
 
-	  {/* (5) Progress Bar */}
+	  {/* Progress Bar & Summary */}
 	  <ProgressBar progress={progress} />
-
-	  {/* (6) Progress Summary */}
 	  <ProgressSummary
 		completedTasks={completedTasks}
 		totalTasks={totalTasks}
 		progress={progress}
 	  />
 
-	  {/* (7) To-Do List Section */}
+	  {/* Task Input (prepend new tasks) */}
 	  <TaskInput addTask={addTask} />
+
+	  {/* Task List (we pass reorder) */}
 	  <TaskList
 		tasks={tasks}
 		updateTask={updateTask}

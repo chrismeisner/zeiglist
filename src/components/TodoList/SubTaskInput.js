@@ -1,6 +1,6 @@
 // src/components/TodoList/SubTaskInput.js
 import React, { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // For unique IDs
+import { v4 as uuidv4 } from 'uuid';
 
 const SubTaskInput = ({ addSubTask, setShowSubTaskInput }) => {
   const [subTaskInput, setSubTaskInput] = useState('');

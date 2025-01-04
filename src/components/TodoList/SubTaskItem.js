@@ -1,8 +1,12 @@
 // src/components/TodoList/SubTaskItem.js
 import React, { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 
-const SubTaskItem = ({ sub, parentTask, updateSubTasks }) => {
+const SubTaskItem = ({
+  sub,
+  parentTask,
+  updateSubTasks,
+  isTop, // Accept isTop prop
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [textValue, setTextValue] = useState(sub.text);
 
@@ -39,6 +43,11 @@ const SubTaskItem = ({ sub, parentTask, updateSubTasks }) => {
 	setIsEditing(!isEditing);
   };
 
+  // Determine hover class based on isTop
+  const baseHoverClass = isTop
+	? 'bg-yellow-200 hover:bg-yellow-100' // Goldish hover color when isTop is true
+	: 'hover:bg-gray-50';
+
   return (
 	<li
 	  data-id={sub.id}
@@ -46,11 +55,10 @@ const SubTaskItem = ({ sub, parentTask, updateSubTasks }) => {
 		group 
 		flex items-center justify-between 
 		p-1 border rounded-lg 
-		hover:bg-gray-50
+		${baseHoverClass} // Apply conditional hover class
 		${sub.completed ? 'line-through text-gray-400' : ''}
 	  `}
 	>
-	  {/* LEFT side: handle + checkbox + label */}
 	  <div className="flex items-center flex-grow">
 		<span className="mr-2 text-gray-500 select-none sub-grab-handle">
 		  ≡
@@ -104,16 +112,18 @@ const SubTaskItem = ({ sub, parentTask, updateSubTasks }) => {
 		)}
 	  </div>
 
-	  {/* RIGHT side: delete */}
-	  <button
-		onClick={handleDelete}
-		className="
-		  ml-2 text-red-500 
-		  hidden group-hover:inline-block
-		"
-	  >
-		🗑️
-	  </button>
+	  {/* DELETE on the right */}
+	  <div>
+		<button
+		  onClick={handleDelete}
+		  className="
+			ml-2 text-red-500 
+			hidden group-hover:inline-block
+		  "
+		>
+		  🗑️
+		</button>
+	  </div>
 	</li>
   );
 };

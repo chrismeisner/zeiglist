@@ -4,7 +4,12 @@ import SubTaskList from './SubTaskList';
 import SubTaskInput from './SubTaskInput';
 import { v4 as uuidv4 } from 'uuid';
 
-const TaskItem = ({ task, updateTask, deleteTask, isTop }) => {
+const TaskItem = ({
+  task,
+  updateTask,
+  deleteTask,
+  isTop,  // <-- reintroduced
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [textValue, setTextValue] = useState(task.text);
   const [showSubTaskInput, setShowSubTaskInput] = useState(false);
@@ -46,15 +51,20 @@ const TaskItem = ({ task, updateTask, deleteTask, isTop }) => {
 	updateTask({ ...task, subtasks: updatedSubtasks });
   };
 
+  // Decide hover color: goldish if top, else normal
+  const baseHoverClass = isTop
+	? 'bg-yellow-200 hover:bg-yellow-200' // Updated hover class for gold
+	: 'hover:bg-gray-100';
+
   return (
 	<li
 	  data-id={task.id}
 	  className={`
-		flex flex-col 
-		p-2 border rounded-lg hover:bg-gray-100
-		task-cell
+		group
+		flex flex-col
+		p-2 border rounded-lg
+		${baseHoverClass} // Apply conditional hover class
 		${task.completed ? 'line-through text-gray-400' : ''}
-		${isTop ? 'bg-yellow-200 text-black' : ''}
 	  `}
 	>
 	  {/* MAIN ROW */}
@@ -111,8 +121,9 @@ const TaskItem = ({ task, updateTask, deleteTask, isTop }) => {
 		  )}
 		</div>
 
-		{/* RIGHT side: +SubTask button (if not completed), then delete */}
+		{/* RIGHT side */}
 		<div className="flex items-center">
+		  {/* +SubTask button (if not completed) */}
 		  {!task.completed && (
 			<button
 			  onClick={() => setShowSubTaskInput(!showSubTaskInput)}
@@ -127,6 +138,8 @@ const TaskItem = ({ task, updateTask, deleteTask, isTop }) => {
 			  + Sub Task
 			</button>
 		  )}
+
+		  {/* Delete button */}
 		  <button
 			onClick={handleDelete}
 			className="
@@ -144,6 +157,7 @@ const TaskItem = ({ task, updateTask, deleteTask, isTop }) => {
 		subtasks={task.subtasks}
 		parentTask={task}
 		updateSubTasks={updateSubTasks}
+		isTop={isTop} // Pass isTop prop
 	  />
 
 	  {/* ADD SUBTASK INPUT */}

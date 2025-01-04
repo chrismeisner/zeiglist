@@ -1,12 +1,9 @@
-// File: src/App.js
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import TodoList from './components/TodoList/TodoList';
 import SavedZeiglists from './components/SavedZeiglists';
-
-// --- NEW IMPORT ---
-import SavedZeiglist from './components/SavedZeiglist'; 
-// This component will fetch a saved list and render the <TodoList> with that data.
+import SavedZeiglist from './components/SavedZeiglist';
 
 function App() {
   return (
@@ -38,7 +35,7 @@ function App() {
             {/* Saved Zeiglists route */}
             <Route path="/saved" element={<SavedZeiglists />} />
 
-            {/* NEW ROUTE: Fetch a saved Zeiglist by ID and open it */}
+            {/* Fetch a saved Zeiglist by ID and open it */}
             <Route path="/saved/:id" element={<SavedZeiglist />} />
           </Routes>
         </main>
