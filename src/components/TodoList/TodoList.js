@@ -114,7 +114,7 @@ function TodoList({ loadedData }) {
 	  const minutes = Math.floor((diff / (1000 * 60)) % 60);
 	  const seconds = Math.floor((diff / 1000) % 60);
 
-	  setCountdownText(`${days}d ${hours}h ${minutes}m ${seconds}s remaining`);
+	  setCountdownText(`${days}d ${hours}h ${minutes}m ${seconds}s`);
 	}, 1000);
 
 	return () => clearInterval(timer);
