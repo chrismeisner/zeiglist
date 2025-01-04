@@ -5,7 +5,7 @@ const Countdown = ({ countdownText }) => {
   return (
 	<div>
 	  <h1 className="text-2xl font-bold mt-4 text-center">
-		Countdown to Event
+		Countdown
 	  </h1>
 	  <div
 		id="countdown"

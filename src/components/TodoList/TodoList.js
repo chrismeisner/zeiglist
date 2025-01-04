@@ -1,24 +1,83 @@
-// src/components/TodoList/TodoList.js
+// File: /Users/chrismeisner/Projects/zeiglist/src/components/TodoList/TodoList.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TaskInput from './TaskInput';
 import TaskList from './TaskList';
 import ProgressBar from '../ProgressBar';
 import ProgressSummary from '../ProgressSummary';
 import FileControls from './FileControls';
+import CurrentTimeDisplay from '../CurrentTimeDisplay';
+import DateTimePicker from '../DateTimePicker';
+import Countdown from '../Countdown';
 import { v4 as uuidv4 } from 'uuid';
 
-const TodoList = () => {
+const TodoList = ({ loadedData }) => {
   /********************************
-   * 1) STATE FOR TITLE, TASKS, ETC.
+   * 1) STATE FOR TITLE, TASKS, CREATED TIME
    ********************************/
-  const [title, setTitle] = useState('My Master List');
-  const [tasks, setTasks] = useState([]);
-  const [createdAt, setCreatedAt] = useState(new Date());
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [title, setTitle] = useState(
+	loadedData ? loadedData.title : 'My Master List'
+  );
+  const [tasks, setTasks] = useState(loadedData ? loadedData.tasks : []);
+  const [createdAt, setCreatedAt] = useState(
+	loadedData?.createdAt ? new Date(loadedData.createdAt) : new Date()
+  );
 
   /********************************
-   * 2) DERIVED PROGRESS INFO
+   * 2) COUNTDOWN & TIME PICKER
+   ********************************/
+  // If loadedData included eventDateTime, restore it. Otherwise default to empty
+  const [eventDateTime, setEventDateTime] = useState(
+	loadedData?.eventDateTime ? loadedData.eventDateTime : ''
+  );
+  const [countdownText, setCountdownText] = useState('');
+
+  // If loadedData changes (e.g. different ID?), update
+  useEffect(() => {
+	if (loadedData) {
+	  setTitle(loadedData.title || 'My Master List');
+	  setTasks(loadedData.tasks || []);
+	  setCreatedAt(
+		loadedData.createdAt ? new Date(loadedData.createdAt) : new Date()
+	  );
+	  setEventDateTime(loadedData.eventDateTime || '');
+	}
+  }, [loadedData]);
+
+  // Recalculate countdown every second
+  useEffect(() => {
+	const timer = setInterval(() => {
+	  if (!eventDateTime) {
+		setCountdownText('Set a time completion time');
+		return;
+	  }
+
+	  const now = new Date();
+	  const target = new Date(eventDateTime);
+	  const diff = target - now;
+
+	  if (diff <= 0) {
+		setCountdownText('Time is up!');
+		return;
+	  }
+
+	  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+	  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+	  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+	  const seconds = Math.floor((diff / 1000) % 60);
+
+	  setCountdownText(`${days}d ${hours}h ${minutes}m ${seconds}s remaining`);
+	}, 1000);
+
+	return () => clearInterval(timer);
+  }, [eventDateTime]);
+
+  const handleUpdateEventDateTime = () => {
+	alert('Event date/time updated!');
+  };
+
+  /********************************
+   * 3) DERIVED PROGRESS INFO
    ********************************/
   const totalTasks = tasks.reduce(
 	(acc, task) => acc + 1 + task.subtasks.length,
@@ -34,12 +93,12 @@ const TodoList = () => {
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   /********************************
-   * 3) TASK CRUD OPERATIONS
+   * 4) TASK CRUD OPERATIONS
    ********************************/
   const addTask = (text) => {
 	if (text.trim() === '') return;
-	setTasks((prevTasks) => [
-	  ...prevTasks,
+	setTasks((prev) => [
+	  ...prev,
 	  {
 		id: uuidv4(),
 		text: text.trim(),
@@ -52,13 +111,13 @@ const TodoList = () => {
   };
 
   const updateTask = (updatedTask) => {
-	setTasks((prevTasks) =>
-	  prevTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+	setTasks((prev) =>
+	  prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
 	);
   };
 
   const deleteTask = (taskId) => {
-	setTasks((prevTasks) => prevTasks.filter((t) => t.id !== taskId));
+	setTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
   const reorderTasks = (newTasks) => {
@@ -66,69 +125,36 @@ const TodoList = () => {
   };
 
   /********************************
-   * 4) FILE UPLOAD & DOWNLOAD
+   * 5) FILE UPLOAD & DOWNLOAD
    ********************************/
+  // (A) handleUpload: read "eventDateTime" if present in the JSON
   const handleUpload = (uploadedData) => {
 	console.log('[TodoList] handleUpload called with:', uploadedData);
-
 	if (!uploadedData.tasks) {
-	  console.error('[TodoList] "tasks" field is missing in uploaded data.');
 	  alert('Invalid file format: "tasks" array is missing.');
 	  return;
 	}
 
-	console.log('[TodoList] Validating uploaded tasks...');
-	const isValid = uploadedData.tasks.every((task) => {
-	  if (
-		!task.id ||
-		typeof task.text !== 'string' ||
-		typeof task.completed !== 'boolean' ||
-		(task.completed && !task.completedTime)
-	  ) {
-		console.error('[TodoList] A task is missing some required fields:', task);
-		return false;
-	  }
-
-	  if (task.subtasks) {
-		const allSubsValid = task.subtasks.every((sub) => {
-		  const subOk =
-			sub.id &&
-			typeof sub.text === 'string' &&
-			typeof sub.completed === 'boolean' &&
-			(sub.completed ? sub.completedTime : true);
-		  if (!subOk) {
-			console.error('[TodoList] A subtask is missing fields:', sub);
-		  }
-		  return subOk;
-		});
-		return allSubsValid;
-	  }
-	  return true;
-	});
-
-	if (!isValid) {
-	  alert('Uploaded data is missing required fields or has invalid formats.');
-	  return;
-	}
-
-	const validCreatedAt = uploadedData.createdAt
-	  ? new Date(uploadedData.createdAt)
-	  : new Date();
-
-	console.log('[TodoList] Setting states from uploaded data...');
 	setTitle(uploadedData.title || 'My Master List');
 	setTasks(uploadedData.tasks);
-	setCreatedAt(validCreatedAt);
+	setCreatedAt(
+	  uploadedData.createdAt ? new Date(uploadedData.createdAt) : new Date()
+	);
 
-	console.log('[TodoList] Updated title, tasks, createdAt.');
+	// If JSON includes eventDateTime, restore it
+	if (uploadedData.eventDateTime) {
+	  setEventDateTime(uploadedData.eventDateTime);
+	}
   };
 
+  // (B) handleSave: include "eventDateTime" in the JSON
   const handleSave = () => {
 	console.log('[TodoList] handleSave triggered.');
 	const data = {
 	  title,
 	  tasks,
 	  createdAt: createdAt.toISOString(),
+	  eventDateTime, // <--- Important
 	};
 	console.log('[TodoList] Data to be saved:', data);
 
@@ -137,7 +163,6 @@ const TodoList = () => {
 	});
 	const url = URL.createObjectURL(blob);
 
-	// Sanitize title for file name if needed
 	const safeTitle = title.replace(/[^\w\s-]/g, '');
 	const link = document.createElement('a');
 	link.href = url;
@@ -148,10 +173,11 @@ const TodoList = () => {
   };
 
   /********************************
-   * 5) TITLE EDITING HANDLERS
+   * 6) TITLE EDITING HANDLERS
    ********************************/
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
   const handleTitleClick = () => {
-	console.log('[TodoList] Title clicked, switching to edit mode.');
 	setIsEditingTitle(true);
   };
 
@@ -170,12 +196,14 @@ const TodoList = () => {
   };
 
   /********************************
-   * 6) RENDER
+   * 7) RENDER
    ********************************/
+  // Combine all data we might want to store (for FileControls, Airtable, etc.)
   const todoData = {
 	title,
 	tasks,
 	createdAt,
+	eventDateTime,
   };
 
   return (
@@ -187,7 +215,16 @@ const TodoList = () => {
 		todoData={todoData}
 	  />
 
-	  {/* (2) Editable Title */}
+	  {/* (2) Countdown & DateTimePicker & Current Time Display */}
+	  <CurrentTimeDisplay />
+	  <DateTimePicker
+		eventDateTime={eventDateTime}
+		setEventDateTime={setEventDateTime}
+		onUpdate={handleUpdateEventDateTime}
+	  />
+	  <Countdown countdownText={countdownText} />
+
+	  {/* (3) Editable Title */}
 	  <div className="text-center mb-4">
 		{isEditingTitle ? (
 		  <input
@@ -209,7 +246,7 @@ const TodoList = () => {
 		)}
 	  </div>
 
-	  {/* (3) Creation Time Display */}
+	  {/* (4) Creation Time Display */}
 	  <div className="text-center mb-4">
 		<p className="text-sm text-gray-500">
 		  List Created:{' '}
@@ -226,17 +263,17 @@ const TodoList = () => {
 		</p>
 	  </div>
 
-	  {/* (4) Progress Bar */}
+	  {/* (5) Progress Bar */}
 	  <ProgressBar progress={progress} />
 
-	  {/* (5) Progress Summary */}
+	  {/* (6) Progress Summary */}
 	  <ProgressSummary
 		completedTasks={completedTasks}
 		totalTasks={totalTasks}
 		progress={progress}
 	  />
 
-	  {/* (6) To-Do List Section */}
+	  {/* (7) To-Do List Section */}
 	  <TaskInput addTask={addTask} />
 	  <TaskList
 		tasks={tasks}

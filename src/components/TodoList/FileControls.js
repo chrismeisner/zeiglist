@@ -1,4 +1,4 @@
-// src/components/TodoList/FileControls.js
+// File: /Users/chrismeisner/Projects/zeiglist/src/components/TodoList/FileControls.js
 
 import React, { useRef, useState } from 'react';
 
@@ -64,7 +64,7 @@ const FileControls = ({ onUpload, onSave, todoData }) => {
 	}, 500); // Simulate short delay
   };
 
-  // ---------- 3) Handle Save to Airtable (with extra debug logs) ----------
+  // ---------- 3) Handle Save to Airtable ----------
   const handleSaveToAirtable = async () => {
 	console.log('[FileControls] handleSaveToAirtable triggered. Data:', todoData);
 	if (!todoData) {
@@ -82,7 +82,13 @@ const FileControls = ({ onUpload, onSave, todoData }) => {
 		headers: {
 		  'Content-Type': 'application/json',
 		},
-		body: JSON.stringify(todoData),
+		// IMPORTANT: Include eventDateTime if present
+		body: JSON.stringify({
+		  title: todoData.title,
+		  tasks: todoData.tasks,
+		  createdAt: todoData.createdAt,
+		  eventDateTime: todoData.eventDateTime || '',
+		}),
 	  });
 
 	  // 1) Log the raw text response for debugging
