@@ -10,7 +10,44 @@ import DateTimePicker from '../DateTimePicker';
 import Countdown from '../Countdown';
 import { v4 as uuidv4 } from 'uuid';
 
-const TodoList = ({ loadedData }) => {
+function TodoList({ loadedData }) {
+  /********************************
+   * A) Helper: toLocalDateTimeInputValue
+   ********************************/
+  function toLocalDateTimeInputValue(date) {
+	// Convert a Date to "YYYY-MM-DDTHH:MM" in *local time*.
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	const hours = String(date.getHours()).padStart(2, '0');
+	const minutes = String(date.getMinutes()).padStart(2, '0');
+	return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  /********************************
+   * B) Helper: getDefaultEventDateTime
+   ********************************/
+  function getDefaultEventDateTime() {
+	const now = new Date();
+
+	// Create a new Date for 4:20 PM local time *today*:
+	const fourTwenty = new Date(
+	  now.getFullYear(),
+	  now.getMonth(),
+	  now.getDate(),
+	  16, // 16 for 4 PM
+	  20  // 20 for minutes
+	);
+
+	// If we are already past 4:20 PM, use tomorrow
+	if (now > fourTwenty) {
+	  fourTwenty.setDate(fourTwenty.getDate() + 1);
+	}
+
+	// Return a local date-time string instead of UTC
+	return toLocalDateTimeInputValue(fourTwenty);
+  }
+
   /********************************
    * 1) State for tasks, title, createdAt, countdown
    ********************************/
@@ -21,11 +58,17 @@ const TodoList = ({ loadedData }) => {
   const [createdAt, setCreatedAt] = useState(
 	loadedData?.createdAt ? new Date(loadedData.createdAt) : new Date()
   );
+
+  // If no loadedData.eventDateTime, default to local 4:20 (today or tomorrow).
   const [eventDateTime, setEventDateTime] = useState(
-	loadedData?.eventDateTime || ''
+	loadedData?.eventDateTime || getDefaultEventDateTime()
   );
+
   const [countdownText, setCountdownText] = useState('');
 
+  /********************************
+   * 2) If loadedData changes, re-apply
+   ********************************/
   useEffect(() => {
 	if (loadedData) {
 	  setTitle(loadedData.title || 'My Master List');
@@ -33,12 +76,19 @@ const TodoList = ({ loadedData }) => {
 	  setCreatedAt(
 		loadedData.createdAt ? new Date(loadedData.createdAt) : new Date()
 	  );
-	  setEventDateTime(loadedData.eventDateTime || '');
+
+	  // If loadedData has a specific eventDateTime (string), use it.
+	  // Otherwise, revert to the 4:20pm default.
+	  if (loadedData.eventDateTime) {
+		setEventDateTime(loadedData.eventDateTime);
+	  } else {
+		setEventDateTime(getDefaultEventDateTime());
+	  }
 	}
   }, [loadedData]);
 
   /********************************
-   * 2) Countdown effect
+   * 3) Countdown effect
    ********************************/
   useEffect(() => {
 	const timer = setInterval(() => {
@@ -47,8 +97,11 @@ const TodoList = ({ loadedData }) => {
 		return;
 	  }
 
+	  // eventDateTime is a local "YYYY-MM-DDTHH:MM" string.
+	  // Convert it back to a real Date object in local time:
+	  const target = new Date(eventDateTime.replace('T', ' ').replace(/-/g, '/'));
+
 	  const now = new Date();
-	  const target = new Date(eventDateTime);
 	  const diff = target - now;
 
 	  if (diff <= 0) {
@@ -72,7 +125,7 @@ const TodoList = ({ loadedData }) => {
   };
 
   /********************************
-   * 3) Derived progress info
+   * 4) Derived progress info
    ********************************/
   const totalTasks = tasks.reduce(
 	(acc, task) => acc + 1 + task.subtasks.length,
@@ -88,7 +141,7 @@ const TodoList = ({ loadedData }) => {
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   /********************************
-   * 4) Task CRUD
+   * 5) Task CRUD
    ********************************/
   const addTask = (text) => {
 	if (text.trim() === '') return;
@@ -115,9 +168,6 @@ const TodoList = ({ loadedData }) => {
 	setTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  /**
-   * 5) Reorder tasks => the first incomplete task is "top".
-   */
   const reorderTasks = (newTasks) => {
 	setTasks(newTasks);
   };
@@ -135,8 +185,12 @@ const TodoList = ({ loadedData }) => {
 	setCreatedAt(
 	  uploadedData.createdAt ? new Date(uploadedData.createdAt) : new Date()
 	);
+
+	// If JSON has an eventDateTime, use it; else use local 4:20.
 	if (uploadedData.eventDateTime) {
 	  setEventDateTime(uploadedData.eventDateTime);
+	} else {
+	  setEventDateTime(getDefaultEventDateTime());
 	}
   };
 
@@ -145,6 +199,7 @@ const TodoList = ({ loadedData }) => {
 	  title,
 	  tasks,
 	  createdAt: createdAt.toISOString(),
+	  // We keep eventDateTime as the local "YYYY-MM-DDTHH:MM" string:
 	  eventDateTime,
 	};
 	const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -180,7 +235,7 @@ const TodoList = ({ loadedData }) => {
 	title,
 	tasks,
 	createdAt,
-	eventDateTime,
+	eventDateTime, // local format
   };
 
   return (
@@ -241,10 +296,10 @@ const TodoList = ({ loadedData }) => {
 		progress={progress}
 	  />
 
-	  {/* Task Input (prepend new tasks) */}
+	  {/* Task Input */}
 	  <TaskInput addTask={addTask} />
 
-	  {/* Task List (we pass reorder) */}
+	  {/* Task List */}
 	  <TaskList
 		tasks={tasks}
 		updateTask={updateTask}
@@ -253,6 +308,6 @@ const TodoList = ({ loadedData }) => {
 	  />
 	</div>
   );
-};
+}
 
 export default TodoList;
