@@ -1,4 +1,5 @@
 // src/components/TodoList/TodoList.js
+
 import React, { useState } from 'react';
 import TaskInput from './TaskInput';
 import TaskList from './TaskList';
@@ -10,8 +11,6 @@ import { v4 as uuidv4 } from 'uuid';
 const TodoList = () => {
   /********************************
    * 1) STATE FOR TITLE, TASKS, ETC.
-   * (Removed localStorage references; 
-   *  just using defaults now.)
    ********************************/
   const [title, setTitle] = useState('My Master List');
   const [tasks, setTasks] = useState([]);
@@ -148,8 +147,6 @@ const TodoList = () => {
 	document.body.removeChild(link);
   };
 
-  // Removed `handleClear` and any calls to localStorage
-
   /********************************
    * 5) TITLE EDITING HANDLERS
    ********************************/
@@ -175,12 +172,22 @@ const TodoList = () => {
   /********************************
    * 6) RENDER
    ********************************/
+  const todoData = {
+	title,
+	tasks,
+	createdAt,
+  };
+
   return (
 	<div>
-	  {/* File Upload & Save (no Clear) */}
-	  <FileControls onUpload={handleUpload} onSave={handleSave} />
+	  {/* (1) File Upload & Save Controls */}
+	  <FileControls
+		onUpload={handleUpload}
+		onSave={handleSave}
+		todoData={todoData}
+	  />
 
-	  {/* Editable Title */}
+	  {/* (2) Editable Title */}
 	  <div className="text-center mb-4">
 		{isEditingTitle ? (
 		  <input
@@ -202,7 +209,7 @@ const TodoList = () => {
 		)}
 	  </div>
 
-	  {/* Creation Time */}
+	  {/* (3) Creation Time Display */}
 	  <div className="text-center mb-4">
 		<p className="text-sm text-gray-500">
 		  List Created:{' '}
@@ -219,17 +226,17 @@ const TodoList = () => {
 		</p>
 	  </div>
 
-	  {/* Progress Bar */}
+	  {/* (4) Progress Bar */}
 	  <ProgressBar progress={progress} />
 
-	  {/* Progress Summary */}
+	  {/* (5) Progress Summary */}
 	  <ProgressSummary
 		completedTasks={completedTasks}
 		totalTasks={totalTasks}
 		progress={progress}
 	  />
 
-	  {/* To-Do List Section */}
+	  {/* (6) To-Do List Section */}
 	  <TaskInput addTask={addTask} />
 	  <TaskList
 		tasks={tasks}
