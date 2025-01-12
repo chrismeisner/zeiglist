@@ -1,22 +1,21 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-// Your web app's Firebase configuration
+// Firebase configuration using environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyCEzvhAT7ooe7yL3HIGfBuddccOQAXscdE",
-  authDomain: "zeiglist.firebaseapp.com",
-  projectId: "zeiglist",
-  storageBucket: "zeiglist.appspot.com",
-  messagingSenderId: "455814575902",
-  appId: "1:455814575902:web:9139157d30c1dccc9a7b0f",
-  measurementId: "G-Z36FDQGHZJ",
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app); // Ensure the Auth instance is initialized
+const auth = getAuth(app);
 
-console.log("[Firebase] Firebase initialized successfully with hardcoded values!");
+console.log("[Firebase] Firebase initialized successfully with environment variables!");
 
+// Export Firebase app and auth instances
 export { app, auth };

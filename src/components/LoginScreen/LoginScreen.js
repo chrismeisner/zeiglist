@@ -8,12 +8,9 @@ const LoginScreen = () => {
   const [step, setStep] = useState(1); // 1: Enter phone, 2: Enter code, 3: Logged in
 
   // Initialize Firebase Auth
-  const auth = getAuth(); // Ensure this initializes correctly
-
+  const auth = getAuth();
+  auth.settings.appVerificationDisabledForTesting = false; // Enable Recaptcha in production
   console.log("[Auth] Firebase Auth instance:", auth);
-  if (!auth) {
-	console.error("[Auth] Firebase Auth instance failed to initialize.");
-  }
 
   const setupRecaptcha = () => {
 	try {
@@ -35,7 +32,7 @@ const LoginScreen = () => {
 			  console.warn("[Auth] Recaptcha expired. Please try again.");
 			},
 		  },
-		  auth // Pass the initialized auth instance here
+		  auth
 		);
 
 		window.recaptchaVerifier.render().then((widgetId) => {
