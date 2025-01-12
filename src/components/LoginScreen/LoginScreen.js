@@ -17,6 +17,12 @@ const LoginScreen = () => {
 		return;
 	  }
 
+	  // Set appVerificationDisabledForTesting only in development
+	  if (process.env.NODE_ENV === "development") {
+		auth.settings.appVerificationDisabledForTesting = true;
+		console.log("[Auth] appVerificationDisabledForTesting set to true (development mode).");
+	  }
+
 	  if (!window.recaptchaVerifier) {
 		console.log("[Auth] Setting up Recaptcha...");
 		window.recaptchaVerifier = new RecaptchaVerifier(
