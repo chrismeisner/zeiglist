@@ -1,3 +1,5 @@
+// File: /Users/chrismeisner/Projects/zeiglist/src/components/LoginScreen/LoginScreen.js
+
 import React, { useState } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../../firebase"; // Correct relative path
@@ -17,10 +19,6 @@ const LoginScreen = () => {
 		return;
 	  }
 
-	  // Set appVerificationDisabledForTesting only in development
-	  if (process.env.NODE_ENV === "development") {
-		console.log("[Auth] appVerificationDisabledForTesting set to true (development mode).");
-	  }
 
 	  if (!window.recaptchaVerifier) {
 		console.log("[Auth] Setting up Recaptcha...");
