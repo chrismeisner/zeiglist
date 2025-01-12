@@ -19,14 +19,6 @@ const LoginScreen = () => {
 		return;
 	  }
 
-	  /*
-	  // Removed because auth.settings no longer exists in Firebase v9+ 
-	  // and causes an error on Heroku or other environments.
-	  // if (process.env.NODE_ENV === "development") {
-	  //   auth.settings.appVerificationDisabledForTesting = true;
-	  //   console.log("[Auth] appVerificationDisabledForTesting set to true (development mode).");
-	  // }
-	  */
 
 	  if (!window.recaptchaVerifier) {
 		console.log("[Auth] Setting up Recaptcha...");
