@@ -19,7 +19,6 @@ const LoginScreen = () => {
 
 	  // Set appVerificationDisabledForTesting only in development
 	  if (process.env.NODE_ENV === "development") {
-		auth.settings.appVerificationDisabledForTesting = true;
 		console.log("[Auth] appVerificationDisabledForTesting set to true (development mode).");
 	  }
 
