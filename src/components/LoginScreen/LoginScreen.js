@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "../../firebase"; // Correct relative path
 
 const LoginScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -7,9 +8,6 @@ const LoginScreen = () => {
   const [user, setUser] = useState(null);
   const [step, setStep] = useState(1); // 1: Enter phone, 2: Enter code, 3: Logged in
 
-  // Initialize Firebase Auth
-  const auth = getAuth();
-  auth.settings.appVerificationDisabledForTesting = false; // Enable Recaptcha in production
   console.log("[Auth] Firebase Auth instance:", auth);
 
   const setupRecaptcha = () => {
@@ -48,11 +46,6 @@ const LoginScreen = () => {
 
   const handleSendCode = async () => {
 	console.log("[Auth] Sending verification code...");
-
-	if (!auth) {
-	  console.error("[Auth] Firebase Auth instance is not initialized.");
-	  return;
-	}
 
 	setupRecaptcha();
 
