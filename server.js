@@ -1,16 +1,17 @@
-const express = require("express");
-const path = require("path");
-const Airtable = require("airtable");
-const dotenv = require("dotenv");
+// File: /Users/chrismeisner/Projects/zeiglist/server.js
+
+const express = require('express');
+const path = require('path');
+const Airtable = require('airtable');
+const dotenv = require('dotenv');
 
 dotenv.config(); // Load environment variables from .env
 
 const app = express();
-app.use(express.json()); // Parse JSON bodies
+app.use(express.json()); // parse JSON bodies
 
 // Serve the static files from the React build folder
-const buildPath = path.join(__dirname, "build");
-app.use(express.static(buildPath));
+app.use(express.static(path.join(__dirname, 'build')));
 
 // Airtable Configuration
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
@@ -25,9 +26,9 @@ base(AIRTABLE_TABLE_NAME)
   .select({ maxRecords: 1 })
   .firstPage((err, records) => {
     if (err) {
-      console.error("[Server] Failed to connect to Airtable:", err);
+      console.error('[Server] Failed to connect to Airtable:', err);
     } else {
-      console.log("[Server] Connected to Airtable successfully!");
+      console.log('[Server] Connected to Airtable successfully!');
     }
   });
 
@@ -35,13 +36,13 @@ base(AIRTABLE_TABLE_NAME)
  * POST /api/save-to-airtable
  * Save data to Airtable, including eventDateTime
  */
-app.post("/api/save-to-airtable", async (req, res) => {
+app.post('/api/save-to-airtable', async (req, res) => {
   try {
-    console.log("[Server] POST /api/save-to-airtable called.");
+    console.log('[Server] POST /api/save-to-airtable called.');
     const { title, tasks, createdAt, eventDateTime } = req.body;
 
     if (!title || !tasks || !createdAt) {
-      return res.status(400).json({ message: "Invalid data format." });
+      return res.status(400).json({ message: 'Invalid data format.' });
     }
 
     const records = [
@@ -50,27 +51,28 @@ app.post("/api/save-to-airtable", async (req, res) => {
           Title: title,
           Tasks: JSON.stringify(tasks),
           CreatedAt: new Date(createdAt).toISOString(),
-          EventDateTime: eventDateTime || "",
+          // NEW FIELD to store countdown data:
+          EventDateTime: eventDateTime || '',
         },
       },
     ];
 
     base(AIRTABLE_TABLE_NAME).create(records, (err, records) => {
       if (err) {
-        console.error("[Server] Error saving to Airtable:", err);
+        console.error('[Server] Error saving to Airtable:', err);
         return res
           .status(500)
-          .json({ message: "Failed to save data to Airtable." });
+          .json({ message: 'Failed to save data to Airtable.' });
       }
 
-      console.log("[Server] Data successfully saved to Airtable:", records);
+      console.log('[Server] Data successfully saved to Airtable:', records);
       return res
         .status(200)
-        .json({ message: "Data saved to Airtable successfully!" });
+        .json({ message: 'Data saved to Airtable successfully!' });
     });
   } catch (error) {
-    console.error("[Server] Server Error:", error);
-    return res.status(500).json({ message: "Server encountered an error." });
+    console.error('[Server] Server Error:', error);
+    return res.status(500).json({ message: 'Server encountered an error.' });
   }
 });
 
@@ -78,18 +80,18 @@ app.post("/api/save-to-airtable", async (req, res) => {
  * GET /api/saved-lists
  * List all saved records in Airtable
  */
-app.get("/api/saved-lists", async (req, res) => {
+app.get('/api/saved-lists', async (req, res) => {
   try {
-    console.log("[Server] GET /api/saved-lists called.");
+    console.log('[Server] GET /api/saved-lists called.');
 
     base(AIRTABLE_TABLE_NAME)
-      .select({ view: "Grid view" })
+      .select({ view: 'Grid view' })
       .all((err, records) => {
         if (err) {
-          console.error("[Server] Error fetching Airtable data:", err);
+          console.error('[Server] Error fetching Airtable data:', err);
           return res
             .status(500)
-            .json({ message: "Failed to fetch data from Airtable." });
+            .json({ message: 'Failed to fetch data from Airtable.' });
         }
 
         // Map records to desired structure
@@ -97,15 +99,15 @@ app.get("/api/saved-lists", async (req, res) => {
           id: record.id,
           title: record.fields.Title,
           createdAt: record.fields.CreatedAt,
-          link: `${req.protocol}://${req.get("host")}/api/saved-lists/${record.id}`,
+          link: `${req.protocol}://${req.get('host')}/api/saved-lists/${record.id}`,
         }));
 
-        console.log("[Server] Saved lists fetched:", savedLists);
+        console.log('[Server] Saved lists fetched:', savedLists);
         return res.status(200).json(savedLists);
       });
   } catch (error) {
-    console.error("[Server] Server Error:", error);
-    return res.status(500).json({ message: "Server encountered an error." });
+    console.error('[Server] Server Error:', error);
+    return res.status(500).json({ message: 'Server encountered an error.' });
   }
 });
 
@@ -113,23 +115,24 @@ app.get("/api/saved-lists", async (req, res) => {
  * GET /api/saved-lists/:id
  * Fetch a single list by ID, including eventDateTime
  */
-app.get("/api/saved-lists/:id", async (req, res) => {
+app.get('/api/saved-lists/:id', async (req, res) => {
   const { id } = req.params;
   console.log(`[Server] GET /api/saved-lists/${id} called.`);
 
   base(AIRTABLE_TABLE_NAME).find(id, (err, record) => {
     if (err) {
-      console.error("[Server] Error fetching Airtable record:", err);
-      return res.status(404).json({ message: "List not found." });
+      console.error('[Server] Error fetching Airtable record:', err);
+      return res.status(404).json({ message: 'List not found.' });
     }
 
-    console.log("[Server] Fetched list:", record);
+    console.log('[Server] Fetched list:', record);
     const listData = {
       id: record.id,
       title: record.fields.Title,
-      tasks: JSON.parse(record.fields.Tasks || "[]"),
+      tasks: JSON.parse(record.fields.Tasks || '[]'),
       createdAt: record.fields.CreatedAt,
-      eventDateTime: record.fields.EventDateTime || "",
+      // NEW FIELD: Load eventDateTime from Airtable
+      eventDateTime: record.fields.EventDateTime || '',
     };
 
     return res.status(200).json(listData);
@@ -137,9 +140,9 @@ app.get("/api/saved-lists/:id", async (req, res) => {
 });
 
 // Fallback: serve index.html for any other GET route
-app.get("*", (req, res) => {
-  console.log("[Server] GET fallback triggered: returning index.html");
-  res.sendFile(path.join(buildPath, "index.html"));
+app.get('*', (req, res) => {
+  console.log('[Server] GET fallback triggered: returning index.html');
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 // Start the server
